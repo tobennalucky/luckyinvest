@@ -28,6 +28,18 @@ export default async function SignupPage({
 
         <form className="mt-6 flex flex-col gap-4">
           <div>
+            <label className="text-xs text-muted" htmlFor="displayName">
+              Display name
+            </label>
+            <input
+              id="displayName"
+              name="displayName"
+              required
+              className="mt-1 w-full rounded-xl border border-border bg-white/5 px-4 py-2.5 text-sm outline-none focus:border-border-strong"
+              placeholder="e.g. Alex"
+            />
+          </div>
+          <div>
             <label className="text-xs text-muted" htmlFor="email">
               Email
             </label>

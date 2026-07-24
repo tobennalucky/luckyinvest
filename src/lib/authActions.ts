@@ -30,8 +30,17 @@ export async function login(formData: FormData) {
 export async function signup(formData: FormData) {
   const supabase = await createClient();
   const { email, password } = getCredentials(formData);
+  const displayName = String(formData.get("displayName") ?? "").trim();
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (!displayName) {
+    redirect("/signup?error=Enter a display name");
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { display_name: displayName } },
+  });
 
   if (error) {
     redirect(`/signup?error=${encodeURIComponent(error.message)}`);
