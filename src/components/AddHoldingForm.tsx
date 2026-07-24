@@ -11,7 +11,7 @@ export function AddHoldingForm() {
   return (
     <form
       ref={formRef}
-      className="panel flex flex-wrap items-end gap-3 rounded-2xl p-4"
+      className="panel flex flex-col flex-wrap items-stretch gap-3 rounded-2xl p-4 sm:flex-row sm:items-end"
       onSubmit={(e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -26,32 +26,34 @@ export function AddHoldingForm() {
         });
       }}
     >
-      <div>
-        <label className="text-xs text-muted" htmlFor="ticker">
-          Ticker
-        </label>
-        <input
-          id="ticker"
-          name="ticker"
-          required
-          placeholder="AAPL"
-          className="mt-1 w-24 rounded-xl border border-border bg-white/5 px-3 py-2 text-sm uppercase outline-none focus:border-border-strong"
-        />
-      </div>
-      <div>
-        <label className="text-xs text-muted" htmlFor="units">
-          Units
-        </label>
-        <input
-          id="units"
-          name="units"
-          type="number"
-          step="any"
-          min="0"
-          required
-          placeholder="10"
-          className="mt-1 w-24 rounded-xl border border-border bg-white/5 px-3 py-2 text-sm outline-none focus:border-border-strong"
-        />
+      <div className="flex gap-3 sm:contents">
+        <div className="flex-1 sm:flex-none">
+          <label className="text-xs text-muted" htmlFor="ticker">
+            Ticker
+          </label>
+          <input
+            id="ticker"
+            name="ticker"
+            required
+            placeholder="AAPL"
+            className="mt-1 w-full rounded-xl border border-border bg-white/5 px-3 py-2 text-sm uppercase outline-none focus:border-border-strong sm:w-24"
+          />
+        </div>
+        <div className="flex-1 sm:flex-none">
+          <label className="text-xs text-muted" htmlFor="units">
+            Units
+          </label>
+          <input
+            id="units"
+            name="units"
+            type="number"
+            step="any"
+            min="0"
+            required
+            placeholder="10"
+            className="mt-1 w-full rounded-xl border border-border bg-white/5 px-3 py-2 text-sm outline-none focus:border-border-strong sm:w-24"
+          />
+        </div>
       </div>
       <div>
         <label className="text-xs text-muted" htmlFor="costBasis">
@@ -64,7 +66,7 @@ export function AddHoldingForm() {
           step="any"
           min="0"
           placeholder="Optional"
-          className="mt-1 w-28 rounded-xl border border-border bg-white/5 px-3 py-2 text-sm outline-none focus:border-border-strong"
+          className="mt-1 w-full rounded-xl border border-border bg-white/5 px-3 py-2 text-sm outline-none focus:border-border-strong sm:w-28"
         />
       </div>
       <button

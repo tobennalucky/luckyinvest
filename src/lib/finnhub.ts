@@ -8,6 +8,10 @@ function apiKey(): string {
   return key;
 }
 
+function warnUnavailable(label: string, symbol: string, status: number) {
+  console.warn(`Finnhub ${label} unavailable for ${symbol}: ${status}`);
+}
+
 export type Quote = {
   c: number; // current price
   d: number | null; // change (absolute)
@@ -18,6 +22,12 @@ export type Quote = {
   pc: number; // previous close
 };
 
+const EMPTY_QUOTE: Quote = { c: 0, d: null, dp: null, h: 0, l: 0, o: 0, pc: 0 };
+
+// Never throws — a single restricted/unavailable ticker (e.g. non-US
+// exchanges are blocked on Finnhub's free tier) shouldn't crash a page that's
+// rendering several tickers via Promise.all. Callers treat c === 0 as "no
+// data available" (see stock detail page's notFound() check).
 export async function getQuote(symbol: string): Promise<Quote> {
   const res = await fetch(
     `${FINNHUB_BASE}/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey()}`,
@@ -25,7 +35,8 @@ export async function getQuote(symbol: string): Promise<Quote> {
   );
 
   if (!res.ok) {
-    throw new Error(`Finnhub quote request failed for ${symbol}: ${res.status}`);
+    warnUnavailable("quote", symbol, res.status);
+    return EMPTY_QUOTE;
   }
 
   return res.json();
@@ -53,7 +64,8 @@ export async function searchSymbols(query: string): Promise<SearchResult[]> {
   );
 
   if (!res.ok) {
-    throw new Error(`Finnhub search request failed: ${res.status}`);
+    warnUnavailable("search", query, res.status);
+    return [];
   }
 
   const data = await res.json();
@@ -73,6 +85,19 @@ export type CompanyProfile = {
   weburl: string;
 };
 
+const EMPTY_PROFILE: CompanyProfile = {
+  ticker: "",
+  name: "",
+  country: "",
+  currency: "",
+  exchange: "",
+  ipo: "",
+  marketCapitalization: 0,
+  finnhubIndustry: "",
+  logo: "",
+  weburl: "",
+};
+
 export async function getCompanyProfile(symbol: string): Promise<CompanyProfile> {
   const res = await fetch(
     `${FINNHUB_BASE}/stock/profile2?symbol=${encodeURIComponent(symbol)}&token=${apiKey()}`,
@@ -80,7 +105,8 @@ export async function getCompanyProfile(symbol: string): Promise<CompanyProfile>
   );
 
   if (!res.ok) {
-    throw new Error(`Finnhub profile request failed for ${symbol}: ${res.status}`);
+    warnUnavailable("profile", symbol, res.status);
+    return EMPTY_PROFILE;
   }
 
   return res.json();
@@ -102,7 +128,8 @@ export async function getKeyMetrics(symbol: string): Promise<KeyMetrics> {
   );
 
   if (!res.ok) {
-    throw new Error(`Finnhub metrics request failed for ${symbol}: ${res.status}`);
+    warnUnavailable("metrics", symbol, res.status);
+    return {};
   }
 
   const data = await res.json();
@@ -132,7 +159,8 @@ export async function getCompanyNews(symbol: string, days = 14): Promise<NewsIte
   );
 
   if (!res.ok) {
-    throw new Error(`Finnhub company news request failed for ${symbol}: ${res.status}`);
+    warnUnavailable("company news", symbol, res.status);
+    return [];
   }
 
   return res.json();
@@ -145,7 +173,8 @@ export async function getMarketNews(category: "general" | "merger" = "general"):
   );
 
   if (!res.ok) {
-    throw new Error(`Finnhub market news request failed: ${res.status}`);
+    warnUnavailable("market news", category, res.status);
+    return [];
   }
 
   return res.json();

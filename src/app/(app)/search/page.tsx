@@ -1,24 +1,25 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search as SearchIcon, ArrowRight } from "lucide-react";
-import { searchSymbols } from "@/lib/finnhub";
+import { useLiveSearch } from "@/lib/useLiveSearch";
 import { getTickerColor } from "@/lib/tickerColor";
 import { TickerBadge } from "@/components/dashboard/TickerBadge";
 import { WatchButton } from "@/components/WatchButton";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getWatchlist } from "@/lib/watchlist";
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q = "" } = await searchParams;
-  const results = q.trim() ? await searchSymbols(q) : [];
-
+export default function SearchPage() {
+  const [query, setQuery] = useState("");
+  const { results, loading } = useLiveSearch(query);
+  const [watchedTickers, setWatchedTickers] = useState<Set<string>>(new Set());
   const configured = isSupabaseConfigured();
-  const watchedTickers = configured
-    ? new Set((await getWatchlist()).map((w) => w.ticker))
-    : new Set<string>();
+
+  useEffect(() => {
+    if (!configured) return;
+    getWatchlist().then((rows) => setWatchedTickers(new Set(rows.map((r) => r.ticker))));
+  }, [configured]);
 
   return (
     <div className="max-w-3xl">
@@ -27,48 +28,50 @@ export default async function SearchPage({
         Search any ticker or company name to view live pricing, stats, and news.
       </p>
 
-      <form action="/search" className="mt-6 flex items-center gap-2 rounded-full border border-border bg-panel px-4 py-3">
+      <div className="mt-6 flex items-center gap-2 rounded-full border border-border bg-panel px-4 py-3">
         <SearchIcon size={17} className="text-muted" />
         <input
           type="text"
-          name="q"
-          defaultValue={q}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for a stock, e.g. Apple or AAPL"
           className="w-full bg-transparent text-sm outline-none placeholder:text-muted"
           autoFocus
         />
-      </form>
+      </div>
 
       <div className="mt-6 flex flex-col gap-2">
-        {q.trim() && results.length === 0 && (
-          <p className="text-sm text-muted">No results for &quot;{q}&quot;.</p>
+        {loading && <p className="text-sm text-muted">Searching…</p>}
+        {!loading && query.trim() && results.length === 0 && (
+          <p className="text-sm text-muted">No results for &quot;{query}&quot;.</p>
         )}
 
-        {results.map((r) => (
-          <div
-            key={r.symbol}
-            className="panel flex items-center justify-between rounded-2xl px-5 py-4"
-          >
-            <Link href={`/stock/${r.symbol}`} className="flex min-w-0 flex-1 items-center gap-3">
-              <TickerBadge ticker={r.symbol} colors={getTickerColor(r.symbol)} />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{r.description}</p>
-                <p className="text-xs text-muted">
-                  {r.displaySymbol} · {r.type}
-                </p>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-3">
-              {configured && (
-                <WatchButton ticker={r.symbol} initialWatched={watchedTickers.has(r.symbol.toUpperCase())} />
-              )}
-              <Link href={`/stock/${r.symbol}`}>
-                <ArrowRight size={16} className="text-muted" />
+        {!loading &&
+          results.map((r, i) => (
+            <div
+              key={`${r.symbol}-${i}`}
+              className="panel flex items-center justify-between rounded-2xl px-5 py-4"
+            >
+              <Link href={`/stock/${r.symbol}`} className="flex min-w-0 flex-1 items-center gap-3">
+                <TickerBadge ticker={r.symbol} colors={getTickerColor(r.symbol)} />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{r.description}</p>
+                  <p className="text-xs text-muted">
+                    {r.displaySymbol} · {r.type}
+                  </p>
+                </div>
               </Link>
+
+              <div className="flex items-center gap-3">
+                {configured && (
+                  <WatchButton ticker={r.symbol} initialWatched={watchedTickers.has(r.symbol.toUpperCase())} />
+                )}
+                <Link href={`/stock/${r.symbol}`}>
+                  <ArrowRight size={16} className="text-muted" />
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

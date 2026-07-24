@@ -8,9 +8,9 @@ import {
   Newspaper,
   Store,
   Settings,
-  LifeBuoy,
   LogOut,
 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutGrid },
@@ -19,10 +19,7 @@ const navItems = [
   { label: "News", href: "/news", icon: Newspaper },
 ];
 
-const bottomItems = [
-  { label: "Settings", icon: Settings },
-  { label: "Support", icon: LifeBuoy },
-];
+const bottomItems = [{ label: "Settings", href: "/settings", icon: Settings }];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -31,11 +28,9 @@ export function Sidebar() {
     <aside className="hidden lg:flex w-64 shrink-0 flex-col justify-between px-5 py-6">
       <div>
         <Link href="/" className="flex items-center gap-2 px-2 mb-10">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2 text-sm font-bold text-white">
-            L
-          </div>
+          <Logo size={32} />
           <span className="text-[15px] font-semibold tracking-tight">
-            LuckyInvest
+            <strong>LuckyInvest</strong>
           </span>
         </Link>
 
@@ -61,14 +56,19 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1">
-        {bottomItems.map(({ label, icon: Icon }) => (
-          <button
+        {bottomItems.map(({ label, href, icon: Icon }) => (
+          <Link
             key={label}
-            className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm text-muted transition-colors hover:bg-white/5 hover:text-text cursor-pointer"
+            href={href}
+            className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm transition-colors ${
+              pathname.startsWith(href)
+                ? "bg-gradient-to-r from-accent to-accent-2 text-white shadow-lg shadow-accent/20"
+                : "text-muted hover:bg-white/5 hover:text-text"
+            }`}
           >
             <Icon size={17} strokeWidth={2} />
             {label}
-          </button>
+          </Link>
         ))}
         <form action="/auth/signout" method="post">
           <button

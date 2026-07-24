@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signup } from "@/lib/authActions";
+import { Logo } from "@/components/Logo";
 
 export default async function SignupPage({
   searchParams,
@@ -12,9 +13,7 @@ export default async function SignupPage({
     <div className="flex min-h-screen w-full items-center justify-center px-4">
       <div className="panel w-full max-w-sm rounded-3xl p-8">
         <div className="mb-8 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-accent-2 text-sm font-bold text-white">
-            L
-          </div>
+          <Logo size={32} />
           <span className="text-[15px] font-semibold tracking-tight">LuckyInvest</span>
         </div>
 

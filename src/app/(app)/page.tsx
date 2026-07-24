@@ -9,17 +9,21 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { getWatchlist } from "@/lib/watchlist";
 import { getHoldings } from "@/lib/portfolio";
+import { checkPortfolioNotification, getUnreadNotificationCount } from "@/lib/notifications";
 
-async function getUserEmail(): Promise<string> {
-  if (!isSupabaseConfigured()) return "you@luckyinvest.com";
+async function getUser(): Promise<{ email: string; displayName?: string }> {
+  if (!isSupabaseConfigured()) return { email: "you@luckyinvest.com" };
   const supabase = await createClient();
-  const { data } = await supabase.auth.getClaims();
-  return (data?.claims?.email as string | undefined) ?? "you@luckyinvest.com";
+  const { data } = await supabase.auth.getUser();
+  return {
+    email: data.user?.email ?? "you@luckyinvest.com",
+    displayName: (data.user?.user_metadata?.display_name as string | undefined) || undefined,
+  };
 }
 
 export default async function Home() {
   const configured = isSupabaseConfigured();
-  const email = await getUserEmail();
+  const { email, displayName } = await getUser();
 
   const watchlistTickers = configured
     ? (await getWatchlist()).map((w) => w.ticker)
@@ -66,9 +70,15 @@ export default async function Home() {
   const totalChangeAbs = holdingRows.reduce((sum, h) => sum + h.changeAbs * h.units, 0);
   const totalChangePercent = total - totalChangeAbs !== 0 ? (totalChangeAbs / (total - totalChangeAbs)) * 100 : 0;
 
+  let hasUnreadNotifications = false;
+  if (configured) {
+    await checkPortfolioNotification(total);
+    hasUnreadNotifications = (await getUnreadNotificationCount()) > 0;
+  }
+
   return (
     <>
-      <Header email={email} />
+      <Header email={email} displayName={displayName} hasUnreadNotifications={hasUnreadNotifications} />
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <TotalHoldingCard total={total} changePercent={totalChangePercent} />
